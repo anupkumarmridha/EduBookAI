@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { AuthUser } from '../services/interfaces/IAuthService';
 import { useAuthService } from '../hooks/useServices';
+import { showToast } from '../utils/toast';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -14,29 +15,41 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const authService = useAuthService();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshAttempted, setRefreshAttempted] = useState(false);
 
   useEffect(() => {
     const loadUser = async () => {
       const token = authService.getToken();
-      if (token) {
-        try {
-          const response = await authService.getProfile();
-          setUser(response.user);
-        } catch {
-          authService.logout();
-        }
+      const refreshToken = authService.getRefreshToken();
+
+      if (!token && !refreshToken) {
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+
+      try {
+        const response = await authService.getProfile();
+        setUser(response.user);
+      } catch (err) {
+        console.error('Failed to load user profile:', err);
+        // Clear tokens on error
+        authService.logout();
+        setUser(null);
+      } finally {
+        setLoading(false);
+        setRefreshAttempted(true);
+      }
     };
 
-    loadUser();
-  }, [authService]);
+    if (!refreshAttempted) {
+      loadUser();
+    }
+  }, [authService, refreshAttempted]);
 
   const login = React.useCallback(async (email: string, password: string) => {
     try {
@@ -44,7 +57,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await authService.login({ email, password });
       setUser(response.user);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred during login');
+      const message = err instanceof Error ? err.message : 'An error occurred during login';
+      setError(message);
+      showToast.error(message);
       throw err;
     }
   }, [authService]);
@@ -55,7 +70,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await authService.signup({ email, password });
       setUser(response.user);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred during signup');
+      const message = err instanceof Error ? err.message : 'An error occurred during signup';
+      setError(message);
+      showToast.error(message);
       throw err;
     }
   }, [authService]);
@@ -63,6 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = React.useCallback(() => {
     authService.logout();
     setUser(null);
+    setRefreshAttempted(false); // Reset refresh attempt state
   }, [authService]);
 
   const isAdmin = React.useCallback(() => user?.role === 'admin', [user]);

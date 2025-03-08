@@ -18,6 +18,7 @@ export interface AuthUser {
 export interface AuthResponse {
   token: string;
   user: AuthUser;
+  refreshToken?: string;
 }
 
 export interface IAuthService {
@@ -26,6 +27,7 @@ export interface IAuthService {
   getProfile(): Promise<AuthResponse>;
   logout(): void;
   getToken(): string | null;
+  getRefreshToken(): string | null;
   forgotPassword(email: string): Promise<void>;
   resetPassword(token: string, password: string): Promise<void>;
   verifyEmail(token: string): Promise<void>;

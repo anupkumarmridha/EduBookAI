@@ -13,6 +13,9 @@ export class AuthService implements IAuthService {
     const response = await ApiClient.post<AuthResponse>(API_ENDPOINTS.AUTH.LOGIN, credentials);
     if (response?.token) {
       this.setToken(response.token);
+      if (response.refreshToken) {
+        this.setRefreshToken(response.refreshToken);
+      }
     }
     return response;
   }
@@ -21,6 +24,9 @@ export class AuthService implements IAuthService {
     const response = await ApiClient.post<AuthResponse>(API_ENDPOINTS.AUTH.SIGNUP, credentials);
     if (response?.token) {
       this.setToken(response.token);
+      if (response.refreshToken) {
+        this.setRefreshToken(response.refreshToken);
+      }
     }
     return response;
   }
@@ -43,18 +49,31 @@ export class AuthService implements IAuthService {
 
   logout(): void {
     this.removeToken();
+    this.removeRefreshToken();
   }
 
   getToken(): string | null {
     return localStorage.getItem(STORAGE_KEYS.TOKEN);
   }
 
+  getRefreshToken(): string | null {
+    return localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+  }
+
   private setToken(token: string): void {
     localStorage.setItem(STORAGE_KEYS.TOKEN, token);
   }
 
+  private setRefreshToken(token: string): void {
+    localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, token);
+  }
+
   private removeToken(): void {
     localStorage.removeItem(STORAGE_KEYS.TOKEN);
+  }
+
+  private removeRefreshToken(): void {
+    localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
   }
 }
 
