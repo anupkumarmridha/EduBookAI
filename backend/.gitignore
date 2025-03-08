@@ -1,0 +1,39 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependency directories
+node_modules/
+
+# Build directories
+dist/
+coverage/
+
+# Environment variables
+.env
+
+# Editor directories and files
+.vscode/
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Docker
+docker-compose.override.yml
+docker-compose.override.yaml
+docker-compose.override.yml
+docker-compose.override.yaml
+
+# Miscellaneous
+*.local
+*.pid
+*.seed
+*.pid.lock
